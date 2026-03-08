@@ -25,9 +25,9 @@
   "author": "Xiaochuan Qian",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/XiaochuanQian/md-blog-i18n"
   },
-  "license": "MIT",
+  "license": "AGPL-3.0",
   "engines": {
     "node": ">=18"
   },
