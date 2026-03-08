@@ -1,0 +1,38 @@
+{
+  "name": "md-blog-i18n",
+  "version": "0.1.0",
+  "description": "Translate Markdown blog posts into multiple languages using an AI translation provider",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "md-blog-i18n": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && chmod +x dist/cli.js",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "markdown",
+    "i18n",
+    "translation",
+    "blog",
+    "openai"
+  ],
+  "author": "Xiaochuan Qian",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,0 +1,7 @@
+src
+content
+*.config.json
+*.map
+.gitignore
+.npmignore
+tsconfig.json
