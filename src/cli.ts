@@ -3,6 +3,7 @@ import { readFile } from "fs/promises";
 import { join } from "path";
 import { translateDirectory } from "./translateDirectory";
 import { createOpenAIProvider } from "./openaiProvider";
+import { buildCache } from "./cache";
 
 interface Config {
   openaiApiKey?: string;
@@ -13,20 +14,23 @@ interface Config {
   };
 }
 
-async function main(): Promise<void> {
-  const args = process.argv.slice(2);
+const USAGE = `\
+Usage:
+  md-blog-i18n <input-dir> <lang1> [lang2 ...]   Translate Markdown files
+  md-blog-i18n hash-cache <input-dir>             Build/update the hash cache without translating
 
-  if (args.length < 2) {
-    console.error(
-      "Usage: md-blog-i18n <input-dir> <lang1> [lang2 ...]\n\n" +
-      "Example: md-blog-i18n content en jp\n\n" +
-      "Reads OpenAI credentials from md-blog-i18n.config.json in the current directory."
-    );
-    process.exit(1);
-  }
+Examples:
+  md-blog-i18n content ja fr zh
+  md-blog-i18n hash-cache content
 
-  const [input, ...languages] = args;
+Reads OpenAI credentials from md-blog-i18n.config.json in the current directory.`;
 
+async function runHashCache(input: string): Promise<void> {
+  await buildCache(input);
+  console.log(`[md-blog-i18n] Cache built for "${input}".`);
+}
+
+async function runTranslate(input: string, languages: string[]): Promise<void> {
   const configPath = join(process.cwd(), "md-blog-i18n.config.json");
   let config: Config = {};
 
@@ -63,6 +67,28 @@ async function main(): Promise<void> {
   await translateDirectory({ input, languages, provider });
 
   console.log("[md-blog-i18n] Done.");
+}
+
+async function main(): Promise<void> {
+  const args = process.argv.slice(2);
+
+  if (args[0] === "hash-cache") {
+    const input = args[1];
+    if (!input) {
+      console.error("Usage: md-blog-i18n hash-cache <input-dir>");
+      process.exit(1);
+    }
+    await runHashCache(input);
+    return;
+  }
+
+  if (args.length < 2) {
+    console.error(USAGE);
+    process.exit(1);
+  }
+
+  const [input, ...languages] = args;
+  await runTranslate(input, languages);
 }
 
 main().catch((err) => {

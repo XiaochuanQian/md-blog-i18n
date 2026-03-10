@@ -6,6 +6,7 @@ Translate Markdown blog posts into multiple languages using an AI translation pr
 
 - Translate a single Markdown file or an entire directory
 - Language-specific output folders (`content/en/`, `content/ja/`, …)
+- **Hash-based caching** — skips files that haven't changed since the last run
 - Built-in OpenAI-compatible provider — works with OpenAI, Qwen MT, and any compatible API
 - No extra runtime dependencies — uses Node 18+ native `fetch`
 - Bring-your-own provider via a simple interface
@@ -21,6 +22,29 @@ Translate Markdown blog posts into multiple languages using an AI translation pr
 ```bash
 npm install md-blog-i18n
 ```
+
+## Caching
+
+`translateDirectory` (and the CLI) automatically skip files that haven't changed since the last run using SHA-256 content hashing.
+
+On each run a `.md-blog-i18n-cache.json` file is written inside the input directory:
+
+```json
+{
+  "post1.md": "a3f1...",
+  "post2.md": "9c4e..."
+}
+```
+
+**Behaviour:**
+- If a file's hash **matches** the cache entry and all language output files exist → **skip**
+- If the hash **changed** (file was edited) or any output file is missing → **retranslate all languages** for that file and update the cache
+
+This makes repeated runs (e.g. in CI `prebuild`) fast and cheap — only changed posts are sent to the API.
+
+> **Tip:** Commit `.md-blog-i18n-cache.json` to version control so CI also benefits from the cache across runs. If you prefer not to, add it to `.gitignore`.
+
+---
 
 ## Configuration
 

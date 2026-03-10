@@ -3,3 +3,4 @@ dist
 md-blog-i18n.config.json
 content/
 *.js.map
+content/.md-blog-i18n-cache.json
