@@ -1,6 +1,6 @@
 {
   "name": "md-blog-i18n",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Translate Markdown blog posts into multiple languages using an AI translation provider",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
