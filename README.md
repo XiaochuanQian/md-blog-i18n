@@ -25,9 +25,7 @@ npm install md-blog-i18n
 
 ## Caching
 
-`translateDirectory` (and the CLI) automatically skip files that haven't changed since the last run using SHA-256 content hashing.
-
-On each run a `.md-blog-i18n-cache.json` file is written inside the input directory:
+`translateDirectory` (and the CLI) automatically track which files have already been translated using SHA-256 content hashing. A `.md-blog-i18n-cache.json` file is written inside the input directory:
 
 ```json
 {
@@ -36,13 +34,30 @@ On each run a `.md-blog-i18n-cache.json` file is written inside the input direct
 }
 ```
 
-**Behaviour:**
-- If a file's hash **matches** the cache entry and all language output files exist → **skip**
-- If the hash **changed** (file was edited) or any output file is missing → **retranslate all languages** for that file and update the cache
+### Translation behaviour per file
 
-This makes repeated runs (e.g. in CI `prebuild`) fast and cheap — only changed posts are sent to the API.
+| Source changed? | Output files missing? | Action |
+|---|---|---|
+| Yes | — | Retranslate **all** requested languages |
+| No | Yes (e.g. new language added) | Translate **only the missing** languages |
+| No | No | **Skip** — nothing to do |
 
-> **Tip:** Commit `.md-blog-i18n-cache.json` to version control so CI also benefits from the cache across runs. If you prefer not to, add it to `.gitignore`.
+This means:
+- **Unchanged files are never re-sent** to the API.
+- **Adding a new language** (e.g. adding `zh` after `ja` and `fr` already exist) only translates the new language for each unchanged file.
+- **Editing a source file** re-translates it into every requested language.
+
+### Seeding the cache (hash-cache command)
+
+If you already have translated output on disk (e.g. you generated it previously without the cache), you can seed the cache without running any translations:
+
+```bash
+md-blog-i18n hash-cache content
+```
+
+This scans the input directory for `.md` files, computes their hashes, and writes the cache file. On the next `md-blog-i18n` run, unchanged files with existing outputs will be skipped.
+
+> **Tip:** Commit `.md-blog-i18n-cache.json` to version control so CI benefits from the cache across runs. If you prefer not to, add it to `.gitignore`.
 
 ---
 
@@ -104,11 +119,11 @@ See [src/languages.ts](src/languages.ts) or [Qwen-mt documentation](https://help
 
 ## CLI usage
 
+### Translate
+
 ```bash
 npx md-blog-i18n <input-dir> <lang1> [lang2 ...]
 ```
-
-### Example
 
 ```bash
 npx md-blog-i18n content ja fr
@@ -128,12 +143,32 @@ Produces:
 content/
   post1.md
   post2.md
+  .md-blog-i18n-cache.json
   ja/
     post1.md
     post2.md
   fr/
     post1.md
     post2.md
+```
+
+Adding a new language later only translates the new language for unchanged files:
+
+```bash
+npx md-blog-i18n content ja fr zh
+# ja/ and fr/ already exist and source is unchanged → only zh/ is generated
+```
+
+### Build the hash cache (without translating)
+
+```bash
+npx md-blog-i18n hash-cache <input-dir>
+```
+
+Scans the directory for `.md` files, computes their SHA-256 hashes, and writes `.md-blog-i18n-cache.json`. No translation is performed. Useful for seeding the cache when you already have translated output on disk.
+
+```bash
+npx md-blog-i18n hash-cache content
 ```
 
 ## Programmatic usage
